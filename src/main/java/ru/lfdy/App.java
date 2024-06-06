@@ -197,6 +197,7 @@ public class App
                             session.save(pr2);
                             session.getTransaction().commit();
 
+
                         } catch (Exception e) {
                             System.err.println(" Не возможно сохранить запись!!" +e);
 //                            throw new RuntimeException(e);
