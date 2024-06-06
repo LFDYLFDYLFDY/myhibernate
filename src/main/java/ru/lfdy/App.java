@@ -214,6 +214,7 @@ public class App
                         System.out.print("Enter new command: ");
                         break;
 
+
                     case "/buy":
                         System.out.println("/buy");
                         session = sessionFactory.getCurrentSession();
