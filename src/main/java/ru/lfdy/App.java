@@ -58,9 +58,21 @@ public class App
                 switch (commandsParts[0]) {
 
                     case "/help":
-                        System.out.println("--------------------------------");
-                        System.out.println(" /help  - Вызов справки");
-                        System.out.println("--------------------------------");
+                        System.out.println("-------------------------------------------------------");
+
+                        System.out.println(" exit                    - Выход");
+                        System.out.println(" /help                   - Вызов справки");
+                        System.out.println(" /listPerson             - Все записи Person");
+                        System.out.println(" /listProduct            - Все записи Product");
+                        System.out.println(" /listOrder              - Все записи Order");
+                        System.out.println(" /addPerson Name         - Добавить запись в Person");
+                        System.out.println(" /addProduct Name        - Добавить запись в Product");
+                        System.out.println(" /changePrice Product_id - Изменение цены на продукт");
+
+
+                        System.out.println(" /buy Person Product     - Покупка");
+
+                        System.out.println("--------------------------------------------------------");
                         System.out.print("Enter new command: ");
                         break;
 
@@ -154,6 +166,26 @@ public class App
                         System.out.print("Enter new command: ");
                         break;
 
+                    case "/addProduct":
+                        session = sessionFactory.getCurrentSession();
+                        session.beginTransaction();
+                        Product pr1 = null;
+                        try {
+                            pr1 = new Product();
+                            pr1.setName(commandsParts[1]);
+                            pr1.setPrice(Double.valueOf(commandsParts[2]));
+                            session.save(pr1);
+                            session.getTransaction().commit();
+
+                        } catch (Exception e) {
+                            System.err.println(" Не возможно сохранить запись!!" +e);
+//                            throw new RuntimeException(e);
+                        }
+                        finally {
+
+                        }
+                        System.out.print("Enter new command: ");
+                        break;
 
 
                     case "/buy":
