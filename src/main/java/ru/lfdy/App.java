@@ -187,6 +187,25 @@ public class App
                         System.out.print("Enter new command: ");
                         break;
 
+                    case "/changePrice":
+                        session = sessionFactory.getCurrentSession();
+                        session.beginTransaction();
+                        Product pr2 = null;
+                        try {
+                            pr2 = session.get(Product.class,commandsParts[1]);
+                            pr2.setPrice(Double.valueOf(commandsParts[2]));
+                            session.save(pr2);
+                            session.getTransaction().commit();
+
+                        } catch (Exception e) {
+                            System.err.println(" Не возможно сохранить запись!!" +e);
+//                            throw new RuntimeException(e);
+                        }
+                        finally {
+
+                        }
+                        System.out.print("Enter new command: ");
+                        break;
 
                     case "/buy":
                         System.out.println("/buy");
