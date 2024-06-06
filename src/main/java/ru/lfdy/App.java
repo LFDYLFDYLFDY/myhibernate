@@ -34,6 +34,12 @@ public class App
                 .buildSessionFactory();
         Session session = null;
         String[] commandsParts = null;
+        Person person = null;
+        Product product = null;
+        Order order = null;
+        Iterator it = null;
+
+
 
 //       throw new ExceptionInInitializerError();
         try {
@@ -68,6 +74,8 @@ public class App
                         System.out.println(" /addPerson Name         - Добавить запись в Person");
                         System.out.println(" /addProduct Name        - Добавить запись в Product");
                         System.out.println(" /changePrice Product_id - Изменение цены на продукт");
+                        System.out.println(" /showProductByPerson Product_id - Показать продукты по ИД покупателя");
+                        System.out.println(" /findPersonsByProductTitle Product_name - Поиск покупателей, закаавших продукт");
 
 
                         System.out.println(" /buy Person Product     - Покупка");
@@ -81,16 +89,16 @@ public class App
                             session.beginTransaction();
 //                            System.out.println("---------------------");
 
-                            Iterator it1 = session
+                            it = session
                                     .createQuery("from Person ")
                                     .getResultList()
                                     .iterator();
 
-                        while (it1.hasNext()) {
-                            Person ps = (Person) it1.next();
+                        while (it.hasNext()) {
+                            person = (Person) it.next();
                             System.out.println("---------------------");
-                             System.out.println("ID   : " + ps.getId());
-                             System.out.println("NAME : " + ps.getName());
+                             System.out.println("ID   : " + person.getId());
+                             System.out.println("NAME : " + person.getName());
 
                             }
                             System.out.println("---------------------");
@@ -103,17 +111,17 @@ public class App
                         session.beginTransaction();
 //                            System.out.println("---------------------");
 
-                        Iterator it2 = session
+                        it = session
                                 .createQuery("from Product ")
                                 .getResultList()
                                 .iterator();
 
-                        while (it2.hasNext()) {
-                            Product pd = (Product) it2.next();
+                        while (it.hasNext()) {
+                            product = (Product) it.next();
                             System.out.println("---------------------");
-                            System.out.println("ID   : " + pd.getId());
-                            System.out.println("NAME : " + pd.getName());
-                            System.out.println("PRICE : " + pd.getPrice());
+                            System.out.println("ID   : " + product.getId());
+                            System.out.println("NAME : " + product.getName());
+                            System.out.println("PRICE : " + product.getPrice());
 
                         }
                         System.out.println("---------------------");
@@ -126,13 +134,13 @@ public class App
                         session.beginTransaction();
 //                            System.out.println("---------------------");
 
-                        Iterator it3 = session
+                        it = session
                                 .createQuery("from Order ")
                                 .getResultList()
                                 .iterator();
 
-                        while (it3.hasNext()) {
-                            Order order = (Order) it3.next();
+                        while (it.hasNext()) {
+                            order = (Order) it.next();
                             System.out.println("---------------------");
                             System.out.println("Person    : " + order.getPerson().getId());
                             System.out.println("Product   : " + order.getProduct().getId());
@@ -149,11 +157,11 @@ public class App
                     case "/addPerson":
                         session = sessionFactory.getCurrentSession();
                         session.beginTransaction();
-                        Person ps = null;
+
                         try {
-                            ps = new Person();
-                            ps.setName(commandsParts[1]);
-                            session.save(ps);
+                            person = new Person();
+                            person.setName(commandsParts[1]);
+                            session.save(person);
                             session.getTransaction().commit();
 
                         } catch (Exception e) {
@@ -169,12 +177,11 @@ public class App
                     case "/addProduct":
                         session = sessionFactory.getCurrentSession();
                         session.beginTransaction();
-                        Product pr1 = null;
                         try {
-                            pr1 = new Product();
-                            pr1.setName(commandsParts[1]);
-                            pr1.setPrice(Double.valueOf(commandsParts[2]));
-                            session.save(pr1);
+                            product = new Product();
+                            product.setName(commandsParts[1]);
+                            product.setPrice(Double.valueOf(commandsParts[2]));
+                            session.save(product);
                             session.getTransaction().commit();
 
                         } catch (Exception e) {
@@ -190,11 +197,10 @@ public class App
                     case "/changePrice":
                         session = sessionFactory.getCurrentSession();
                         session.beginTransaction();
-                        Product pr2 = null;
                         try {
-                            pr2 = session.get(Product.class,commandsParts[1]);
-                            pr2.setPrice(Double.valueOf(commandsParts[2]));
-                            session.save(pr2);
+                            product = session.get(Product.class,commandsParts[1]);
+                            product.setPrice(Double.valueOf(commandsParts[2]));
+                            session.save(product);
                             session.getTransaction().commit();
 
 
@@ -216,18 +222,18 @@ public class App
                                 .createQuery("from Person p where p.name = :name")
                                 .setParameter("name", commandsParts[1]);
                         System.out.println(query1.getResultList());
-                        Person person = (Person) session
+                        person = (Person) session
                                 .createQuery("from Person  p where p.name = :name")
                                 .setParameter("name", commandsParts[1]).getSingleResult();
-                        System.out.println("1111111111111111111111111111111/buy Person_1 Product_1");
-                        Product product = (Product) session
+//                        System.out.println("1111111111111111111111111111111/buy Person_1 Product_1");
+                        product = (Product) session
                                 .createQuery("from Product p where p.name = :name")
                                         .setParameter("name", commandsParts[2]).getSingleResult();
                         OrderKey orderKey = new OrderKey();
                         orderKey.setPersonID(person.getId());
                         orderKey.setProductID(product.getId());
 
-                        Order order = new Order();
+                        order = new Order();
                         order.setOrderKey(orderKey);
                         order.setPrice(product.getPrice());
                         session.save(order);
@@ -235,6 +241,61 @@ public class App
                       System.out.println("Saved the next order: " + order.toString());
                       System.out.println("Enter new command: ");
                       break;
+
+                    case ("/showProductByPerson"):
+                        session = sessionFactory.getCurrentSession();
+                        session.beginTransaction();
+//                        Person ps2 = null;
+
+                            person = (Person) session
+                                    .createQuery("FROM Person p WHERE p.name= :name")
+                                            .setParameter("name", commandsParts[1] )
+                                                    .getSingleResult();
+                            List<Order> orders = person.getOrders();
+                            Person finalPerson = person;
+                            orders.forEach(o -> {
+                             System.out.println("Product for " +  finalPerson.getName() + ": " +
+                                        o.getProduct().toString());
+                            });
+                            session.save(person);
+                            session.getTransaction().commit();
+
+
+
+                        System.out.print("Enter new command: ");
+                        break;
+
+                    case "/findPersonsByProductTitle":
+                        session = sessionFactory.getCurrentSession();
+                        session.beginTransaction();
+
+                        product = (Product) session
+                                .createQuery("FROM Product p WHERE p.name = :name")
+                                .setParameter("name", commandsParts[1]).getSingleResult();
+                        orders=  product.getOrders();
+                        Product finalProduct = product;
+                        orders.forEach(o->
+                                System.out.println("Persons for "+ finalProduct.getName() + ":"+
+                                        o.getPerson().toString()));
+                        session.getTransaction().commit();
+                        System.out.print("Enter new command: ");
+                        break;
+
+                        case"/removePerson":
+                            session = sessionFactory.getCurrentSession();
+                            session.beginTransaction();
+                            person = (Person) session
+                                    .createQuery("FROM Person p WHERE p.name = :name")
+                                            .setParameter("name", commandsParts[1]).getSingleResult();
+                            session.delete(person);
+
+
+                            session.getTransaction().commit();
+                            System.out.print("Enter new command: ");
+                            break;
+
+
+
                     default:
                         System.out.println("Invalid command: " + commandsParts[0]);
                         System.out.print("Enter new command: ");
