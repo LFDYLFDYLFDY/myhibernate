@@ -16,5 +16,9 @@ public class Employee {
     @Column(name = "name")
     private String name;
 
+    @OneToOne
+    @JoinColumn(name = "info_id")
+    EmployeeInfo info;
+
 
 }
