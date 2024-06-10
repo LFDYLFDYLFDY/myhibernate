@@ -61,16 +61,16 @@ public class App3 {
                 .buildSessionFactory();
         Session session = null;
         try{
-            String filename="create_table_2.sql";
-            Path pathToFile = Paths.get(filename);
-            System.out.println(pathToFile);
-//      String sql = Files.lines(Paths.get("create_table_2.sql")).collect(Collectors.joining(" "));
-         String sql = Files.lines(Paths.get("create_table_2.sql")).toString();
+//            String filename="create_table_2.sql";
+//            Path pathToFile = Paths.get(filename);
+//            System.out.println(pathToFile);
+     String sql = Files.lines(Paths.get("src\\\\main\\\\resources\\\\create_table_2.sql")).collect(Collectors.joining(" "));
+//         String sql = Files.lines(Paths.get("create_table_2.sql")).toString();
 //            String sql = "select version()";
         System.out.println(sql);
            session = factory.getCurrentSession();
            session.beginTransaction();
-//            session.createNativeQuery(sql).executeUpdate();
+          session.createNativeQuery(sql).executeUpdate();
 
             session.getTransaction().commit();
 
