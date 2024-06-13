@@ -13,7 +13,8 @@ insert into customers (name) values  ('Bob'),('John'),('Max');
 
 drop table if exists big_items cascade ;
 create table big_items (id serial primary key , val int, junkField int, version serial);
-insert into big_items (val) values (10);
+insert into big_items (val, junkField) values (10,5);
+
 
 
 commit ;

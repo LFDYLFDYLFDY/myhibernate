@@ -5,6 +5,8 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.DialectOverride;
+import org.hibernate.annotations.OptimisticLock;
 
 @Data
 @Entity
@@ -12,18 +14,25 @@ import org.hibernate.annotations.ColumnDefault;
 public class BigItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @ColumnDefault("nextval('big_items_id_seq'")
-    @Column(name = "id", nullable = false)
+
+    @Column(name = "id")
     private Integer id;
 
     @Column(name = "val")
     private Integer val;
 
     @Column(name = "junkfield")
+   @OptimisticLock(excluded = true)
     private Integer junkfield;
 
-    @ColumnDefault("nextval('big_items_version_seq'")
-    @Column(name = "version", nullable = false)
-    private Integer version;
 
+    @Version()
+    long version;
+
+    public BigItem(Integer val) {
+        this.val = val;
+    }
+
+    public BigItem() {
+    }
 }

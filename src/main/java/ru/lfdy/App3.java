@@ -1,22 +1,29 @@
 package ru.lfdy;
 
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.OptimisticLockException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import ru.lfdy.entity.*;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
 
 public class App3 {
     public static void main(String[] args) throws IOException{
-        prepareData();
+    prepareData();
         work();
-
+//      optimisticVersioningTest();
+//      optimisticVersioningThreadingTest();
+queryPessimisticLockHandle();
 
     }
 
@@ -82,5 +89,147 @@ public class App3 {
 //                session.close();
 //            }
         }
+    }
+    public static void uncheckableSleep( int ms) {
+        try {
+            Thread.sleep(ms);
+
+        }
+        catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+    }
+    public static void optimisticVersioningTest(){
+        SessionFactory factory = new Configuration()
+                .configure("hibernate.cfg.xml")
+                .addAnnotatedClass(BigItem.class)
+                .buildSessionFactory();
+        Session session = null;
+        try {
+            session = factory.getCurrentSession();
+            session.beginTransaction();
+            BigItem bigItem = new BigItem(20);
+            session.save(bigItem);
+            System.out.println(bigItem);
+            bigItem.setVal(25);
+            System.out.println(bigItem);
+            session.save(bigItem);
+            System.out.println(bigItem);
+            session.getTransaction().commit();
+
+            session = factory.getCurrentSession();
+            session.beginTransaction();
+            bigItem = session.get(BigItem.class,1L);
+            System.out.println(bigItem);
+            session.getTransaction().commit();
+
+
+        }
+        finally {
+            factory.close();
+            if (session!=null){
+                session.close();
+            }
+        }
+    }
+    public static void optimisticVersioningThreadingTest() {
+        CountDownLatch countDownLatch = new CountDownLatch(2);
+//        SessionFactory factory = new Configuration()
+//                .configure("hibernate.cfg.xml")
+//                .addAnnotatedClass(BigItem.class)
+//                .buildSessionFactory();
+//        Session session = factory.getCurrentSession();
+//        session.beginTransaction();
+//        BigItem bigItem = session.get(BigItem.class,1L);
+//        System.out.println(bigItem);
+
+        try {
+            new Thread(()->{
+
+                System.out.println("Thread 1 begin");
+                SessionFactory factory = new Configuration()
+                        .configure("hibernate.cfg.xml")
+                        .addAnnotatedClass(BigItem.class)
+                        .buildSessionFactory();
+                Session session = factory.getCurrentSession();
+
+                session.beginTransaction();
+                BigItem bigItem = session.get(BigItem.class,1L);
+                bigItem.setVal(100);
+                  uncheckableSleep(1000);
+                session.save(bigItem);
+                session.getTransaction().commit();
+                System.out.println("Thread 1 end");
+                if(session!=null){
+                    session.close();
+                }
+                countDownLatch.countDown();
+            }).start();
+            new Thread(()->{
+                SessionFactory factory = new Configuration()
+                        .configure("hibernate.cfg.xml")
+                        .addAnnotatedClass(BigItem.class)
+                        .buildSessionFactory();
+                System.out.println("Thread 2 begin");
+                Session session = factory.getCurrentSession();
+                session.beginTransaction();
+                BigItem bigItem = session.get(BigItem.class,1L);
+                bigItem.setVal(500);
+                uncheckableSleep(3000);
+                try {
+                    session.save(bigItem);
+                    session.getTransaction().commit();
+                    System.out.println("Thread 2 end");
+
+                }
+                catch (OptimisticLockException e) {
+                    session.getTransaction().rollback();
+//                    System.out.println("Optimistic lock exception");
+                    System.err.println(e.getMessage());
+                }
+                if(session!=null){
+                    session.close();
+
+                }
+            }).start();
+       }
+        finally {
+//            factory.close();
+
+            }
+//
+
+    }
+    public static void queryPessimisticLockHandle(){
+        SessionFactory factory = new Configuration()
+                .configure("hibernate.cfg.xml")
+                .addAnnotatedClass(Customer.class)
+                .addAnnotatedClass(Manufacturer.class)
+                .addAnnotatedClass(Products.class)
+                .addAnnotatedClass(BigItem.class)
+                .buildSessionFactory();
+        Session session = null;
+        try{
+            session = factory.getCurrentSession();
+            session.beginTransaction();
+            BigDecimal totalCost = new BigDecimal(0);
+            List<Products> products = session.createQuery("SELECT p FROM Products p WHERE p.title= :title", Products.class)
+               .setLockMode(LockModeType.PESSIMISTIC_READ)
+              .setHint("javax.persistence.lock.timeout",5000)
+                    .setParameter("title","Sprite")
+                    .getResultList();
+            for (Products p : products ) {
+                System.out.println(p.toString());
+            }
+          session.getTransaction().commit();
+        }
+        finally {
+            factory.close();
+            if (session!=null){
+                session.close();
+            }
+        }
+
     }
 }
